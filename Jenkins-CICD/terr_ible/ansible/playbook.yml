@@ -1,0 +1,46 @@
+---
+- name: Install Java, Maven, Docker, and Jenkins on Amazon Linux
+  hosts: ec2
+  become: yes
+
+  tasks:
+    - name: Update all packages
+      dnf:
+        name: "*"
+        state: latest
+
+    - name: Install Java 17
+      dnf:
+        name: java-17-amazon-corretto
+        state: present
+
+    - name: Install Maven
+      dnf:
+        name: maven
+        state: present
+
+    - name: Install Docker
+      dnf:
+        name: docker.io
+        state: present
+
+    - name: Start and enable Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+    
+    - name: Pull latest app image
+      docker_image:
+        name: subasangeeth/jenkins:v1
+        tag: latest
+        source: pull
+
+    - name: Run container
+      docker_container:
+        name: myapp
+        image: subasangeeth/jenkins:v1
+        state: started
+        restart_policy: always
+        ports:
+          - "8000:8000"
