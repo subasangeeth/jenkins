@@ -21,7 +21,7 @@
 
     - name: Install Docker
       dnf:
-        name: docker.io
+        name: docker
         state: present
 
     - name: Start and enable Docker
