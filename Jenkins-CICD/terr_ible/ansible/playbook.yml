@@ -36,14 +36,14 @@
     
     - name: Pull latest app image
       docker_image:
-        name: subasangeeth/jenkins:v1
+        name: subasangeeth/app:v1
         tag: latest
         source: pull
 
     - name: Run container
       docker_container:
         name: myapp
-        image: subasangeeth/jenkins:v1
+        image: subasangeeth/app:v1
         state: started
         restart_policy: always
         ports:
