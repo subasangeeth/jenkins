@@ -1,10 +1,6 @@
 pipeline {
     agent any
     
-    tools{
-        jdk 'jdk21'
-        maven 'mvn'
-    }
     
     stages {
         
@@ -32,19 +28,44 @@ pipeline {
             steps{
                 script{
                      dir('Jenkins-CICD'){
-                docker.build('jenkins:v1')
+                docker.build('app:v1')
+                sh 'docker tag app:v1 subasangeeth/app:v1'
+                sh 'docker push subasangeeth/app:v1'
                      }
                 }
             }
         }
         
-        stage ('Deploy'){
+        stage ('Terraform'){
             
             steps{
-                sh 'docker stop springboot-app || true'
-                sh 'docker rm springboot-app || true'
-                sh 'docker run -d -p 8000:8000 --name springboot-app jenkins:v1'
+                dir('Jenkins-CICD/terr_ible'){
+                    sh "terraform init"
+                    sh "terraform plan"
+                    sh "terraform apply -auto-approve"
+                
+                }
             }
         }
+        
+        stage ('Ansible'){
+            steps {
+                
+            dir('Jenkins-CICD/terr_ible/ansible'){
+             script {
+                    env.IP = sh(
+                        script: "cd .. && terraform output -raw public_ip",
+                        returnStdout: true
+                    ).trim()
+                sh "echo Terraform IP = ${env.IP}"
+            
+            sh '''echo "[ec2]" > hosts.ini'''
+            sh "echo \"${env.IP} ansible_user=ec2-user ansible_ssh_private_key_file=sshkey.pem \" >> hosts.ini"
+            sh "chmod 600 sshkey.pem"
+            sh 'ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i hosts.ini playbook.yml'
+            }
+            }
+            }
     }
+}
 }
