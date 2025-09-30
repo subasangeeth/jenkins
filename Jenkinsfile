@@ -36,7 +36,7 @@ pipeline {
             }
         }
         
-        stage ('Terraform'){
+        stage ('Terraform - EC2 '){
             
             steps{
                 dir('Jenkins-CICD/terr_ible'){
@@ -48,7 +48,7 @@ pipeline {
             }
         }
         
-        stage ('Ansible'){
+        stage ('Ansible config & dependencies'){
             steps {
                 
             dir('Jenkins-CICD/terr_ible/ansible'){
@@ -58,7 +58,10 @@ pipeline {
                         returnStdout: true
                     ).trim()
                 sh "echo Terraform IP = ${env.IP}"
-            
+             }
+            }
+             stage ('Deploy'){
+            steps {
             sh '''echo "[ec2]" > hosts.ini'''
             sh "echo \"${env.IP} ansible_user=ec2-user ansible_ssh_private_key_file=sshkey.pem \" >> hosts.ini"
             sh "chmod 600 sshkey.pem"
